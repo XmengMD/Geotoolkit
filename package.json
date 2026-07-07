@@ -1,0 +1,32 @@
+{
+  "name": "mytoolkits",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.7",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/device": "^8.0.2",
+    "@capacitor/geolocation": "^8.2.0",
+    "@capacitor/motion": "^8.0.0",
+    "@capacitor/network": "^8.0.1",
+    "@capgo/capacitor-wifi": "^8.4.0",
+    "echarts": "^6.1.0",
+    "mgrs": "^2.1.0",
+    "pinia": "^3.0.4",
+    "utm-latlng": "^1.0.8",
+    "vue": "^3.5.39",
+    "vue-router": "^5.1.0"
+  }
+}

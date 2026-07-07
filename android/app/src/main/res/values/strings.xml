@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GeoToolKit</string>
+    <string name="title_activity_main">GeoToolKit</string>
+    <string name="package_name">com.geotoolkit.app</string>
+    <string name="custom_url_scheme">com.geotoolkit.app</string>
+</resources>

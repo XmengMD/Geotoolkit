@@ -1,0 +1,86 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist
+dist-ssr
+*.local
+
+# Vite / Vue cache
+.vite
+.vitepress/cache
+*.tsbuildinfo
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage
+.nyc_output
+
+# Capacitor
+# 平台构建产物（iOS / Android）
+ios/App/build
+ios/App/Pods
+ios/App/Podfile.lock
+ios/App/App/public
+ios/.DS_Store
+android/app/build
+android/build
+android/.gradle
+android/.idea
+android/local.properties
+android/captures
+android/*.iml
+android/app/*.iml
+android/.cxx
+android/app/.cxx
+
+# Capacitor generated config (sync 时会重新生成)
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/app/src/main/assets/public
+ios/App/App/capacitor.config.json
+ios/App/App/capacitor.plugins.json
+ios/App/App/public
+
+# Keystore / signing
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Misc
+*.orig
+*.cache
+.cache
