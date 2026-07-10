@@ -17,13 +17,28 @@ const {
   stopWatching
 } = useSensor();
 
-// 模拟罗盘显示角度（相对于正北）
+// 罗盘显示角度（相对于正北），使用向量低通滤波平滑，避免 0°/360° 跳变
 const compassAngle = ref(0);
+let compassX = 0;
+let compassY = 0;
+const COMPASS_SMOOTHING = 0.3;
+
+const updateCompassAngle = (targetAngle: number) => {
+  const rad = targetAngle * (Math.PI / 180);
+  const targetX = Math.sin(rad);
+  const targetY = -Math.cos(rad);
+
+  compassX += (targetX - compassX) * COMPASS_SMOOTHING;
+  compassY += (targetY - compassY) * COMPASS_SMOOTHING;
+
+  const angle = Math.atan2(compassX, -compassY) * (180 / Math.PI);
+  compassAngle.value = (angle + 360) % 360;
+};
 
 // 更新罗盘角度
 watch(() => sensorData.value?.compass, (compass) => {
   if (compass !== null && compass !== undefined) {
-    compassAngle.value = compass;
+    updateCompassAngle(compass);
   }
 });
 

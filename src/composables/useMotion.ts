@@ -5,6 +5,7 @@ import type { PluginListenerHandle } from '@capacitor/core';
 import type { MotionData, ChartDataPoint, ChartTimeRange } from '@/types';
 import { useSettingsStore } from '@/stores/settings';
 import { convertSpeed } from '@/utils/coordinates';
+import { throttle } from '@/utils/throttle';
 import {
   parseCompassHeading,
   isSourceAtLeastAsGood,
@@ -12,6 +13,9 @@ import {
   type DeviceOrientationEventExtended,
   type CompassSource
 } from '@/utils/orientation';
+
+// 显示层最小更新间隔（毫秒），避免传感器 60Hz 事件导致 UI 数字高速抖动
+const MIN_DISPLAY_UPDATE_INTERVAL = 100;
 
 export function useMotion() {
   const settingsStore = useSettingsStore();
@@ -23,6 +27,11 @@ export function useMotion() {
   const speedHistory = ref<ChartDataPoint[]>([]);
   const altitudeHistory = ref<ChartDataPoint[]>([]);
   const accelerationHistory = ref<ChartDataPoint[]>([]);
+
+  // 图表历史数据按 1Hz 采样，避免高频传感器事件导致单点时间范围被压缩
+  let lastSpeedHistoryPush = 0;
+  let lastAltitudeHistoryPush = 0;
+  let lastAccelerationHistoryPush = 0;
 
   // 上一帧的速度（用于计算加速度）
   let lastSpeed: number | null = null;
@@ -123,7 +132,8 @@ export function useMotion() {
   };
 
   // 处理设备方向事件，解析为顺时针罗盘航向
-  const handleOrientationEvent = (
+  // 节流到 100ms，避免 deviceorientation 高频事件导致方向/指针 UI 高速抖动
+  const handleOrientationEvent = throttle((
     event: DeviceOrientationEventExtended,
     forceSource?: 'absolute'
   ) => {
@@ -156,7 +166,7 @@ export function useMotion() {
         };
       }
     }
-  };
+  }, MIN_DISPLAY_UPDATE_INTERVAL);
 
   // 处理 GPS 位置更新
   const handleGPSUpdate = (pos: { coords: { speed: number | null; heading: number | null; altitude: number | null }; timestamp: number }) => {
@@ -205,18 +215,21 @@ export function useMotion() {
       timestamp
     };
 
-    // 添加到历史数据
-    if (speed !== null) {
+    // 添加到历史数据（按 1Hz 采样，保证图表时间范围与设置一致）
+    const now = Date.now();
+    if (speed !== null && now - lastSpeedHistoryPush >= 1000) {
+      lastSpeedHistoryPush = now;
       speedHistory.value.push({
         value: speed,
-        timestamp: Date.now()
+        timestamp: now
       });
     }
 
-    if (altitude !== null) {
+    if (altitude !== null && now - lastAltitudeHistoryPush >= 1000) {
+      lastAltitudeHistoryPush = now;
       altitudeHistory.value.push({
         value: altitude,
-        timestamp: Date.now()
+        timestamp: now
       });
     }
 
@@ -293,7 +306,8 @@ export function useMotion() {
       }
 
       // 监听设备运动事件（获取加速度）
-      deviceMotionHandler = (event: DeviceMotionEvent) => {
+      // 节流到 100ms，避免 devicemotion 高频事件导致加速度数值/图表高速抖动
+      deviceMotionHandler = throttle((event: DeviceMotionEvent) => {
         const timestamp = Date.now();
 
         // 计算加速度
@@ -312,11 +326,14 @@ export function useMotion() {
             magnitude
           };
 
-          // 添加到加速度历史
-          accelerationHistory.value.push({
-            value: magnitude,
-            timestamp
-          });
+          // 添加到加速度历史（按 1Hz 采样，保证图表时间范围与设置一致）
+          if (timestamp - lastAccelerationHistoryPush >= 1000) {
+            lastAccelerationHistoryPush = timestamp;
+            accelerationHistory.value.push({
+              value: magnitude,
+              timestamp
+            });
+          }
         }
 
         // 更新运动数据（保留 GPS 数据）
@@ -337,7 +354,7 @@ export function useMotion() {
         }
 
         cleanupHistory();
-      };
+      }, MIN_DISPLAY_UPDATE_INTERVAL);
 
       window.addEventListener('devicemotion', deviceMotionHandler);
       isActive.value = true;
@@ -382,6 +399,9 @@ export function useMotion() {
     lastGPSHeading = null;
     deviceOrientation = null;
     currentOrientationSource = 'relative';
+    lastSpeedHistoryPush = 0;
+    lastAltitudeHistoryPush = 0;
+    lastAccelerationHistoryPush = 0;
   };
 
   // 更新速度数据（从GPS）
@@ -406,16 +426,21 @@ export function useMotion() {
       motionData.value.timestamp = Date.now();
     }
 
-    // 添加到历史数据
-    speedHistory.value.push({
-      value: speed,
-      timestamp: Date.now()
-    });
+    // 添加到历史数据（按 1Hz 采样，保证图表时间范围与设置一致）
+    const now = Date.now();
+    if (now - lastSpeedHistoryPush >= 1000) {
+      lastSpeedHistoryPush = now;
+      speedHistory.value.push({
+        value: speed,
+        timestamp: now
+      });
+    }
 
-    if (altitude !== null) {
+    if (altitude !== null && now - lastAltitudeHistoryPush >= 1000) {
+      lastAltitudeHistoryPush = now;
       altitudeHistory.value.push({
         value: altitude,
-        timestamp: Date.now()
+        timestamp: now
       });
     }
 

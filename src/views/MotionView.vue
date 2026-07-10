@@ -113,6 +113,32 @@ const headingDirection = computed(() => {
   return directions[index];
 });
 
+// 连续显示角度，避免 0°/360° 边界处 CSS transition 绕远路
+const displayHeading = ref(0);
+let lastHeadingValue: number | null = null;
+
+watch(() => motionData.value?.heading, (heading) => {
+  if (heading === null || heading === undefined) {
+    lastHeadingValue = null;
+    return;
+  }
+
+  if (lastHeadingValue === null) {
+    displayHeading.value = heading;
+  } else {
+    let delta = heading - lastHeadingValue;
+    // 选择最短路径，避免跨越 0°/360° 时绕一整圈
+    if (delta > 180) {
+      delta -= 360;
+    } else if (delta < -180) {
+      delta += 360;
+    }
+    displayHeading.value += delta;
+  }
+
+  lastHeadingValue = heading;
+});
+
 // 初始化图表
 const initCharts = () => {
   nextTick(() => {
@@ -351,7 +377,7 @@ onUnmounted(() => {
             <span class="compass-mini-s">S</span>
             <span class="compass-mini-w">W</span>
           </div>
-          <div class="compass-mini-needle" :style="{ transform: `rotate(${motionData?.heading || 0}deg)` }">
+          <div class="compass-mini-needle" :style="{ transform: `rotate(${displayHeading}deg)` }">
             <div class="needle-head"></div>
             <div class="needle-tail"></div>
           </div>

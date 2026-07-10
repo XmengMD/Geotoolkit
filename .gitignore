@@ -54,6 +54,7 @@ ios/App/Podfile.lock
 ios/App/App/public
 ios/.DS_Store
 android/app/build
+android/app/release
 android/build
 android/.gradle
 android/.idea

@@ -3,6 +3,7 @@ import { Motion } from '@capacitor/motion';
 import type { PluginListenerHandle } from '@capacitor/core';
 import type { SensorData, ChartDataPoint } from '@/types';
 import { calculateMagneticDeclination } from '@/utils/coordinates';
+import { throttle } from '@/utils/throttle';
 import {
   parseCompassHeading,
   isSourceAtLeastAsGood,
@@ -10,6 +11,9 @@ import {
   type DeviceOrientationEventExtended,
   type CompassSource
 } from '@/utils/orientation';
+
+// 显示层最小更新间隔（毫秒），避免传感器 60Hz 事件导致 UI 数字高速抖动
+const MIN_DISPLAY_UPDATE_INTERVAL = 100;
 
 export function useSensor() {
   const sensorData = ref<SensorData | null>(null);
@@ -103,7 +107,8 @@ export function useSensor() {
       };
 
       // 监听加速度计（包含重力和陀螺仪旋转速率）
-      accelListener = await Motion.addListener('accel', (event) => {
+      // 节流到 100ms，避免 Motion accel 高频事件导致加速度计/陀螺仪数值高速抖动
+      accelListener = await Motion.addListener('accel', throttle((event) => {
         const now = Date.now();
 
         if (!sensorData.value) {
@@ -162,9 +167,10 @@ export function useSensor() {
         }
 
         cleanupHistory();
-      });
+      }, MIN_DISPLAY_UPDATE_INTERVAL));
 
       // 统一的罗盘方向处理
+      // 罗盘方向不再节流，由 UI 层做平滑，保证类似原生指南针的实时感
       const handleOrientationEvent = (
         event: DeviceOrientationEventExtended,
         forceSource?: 'absolute'
